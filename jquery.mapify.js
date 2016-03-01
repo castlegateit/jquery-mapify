@@ -14,6 +14,9 @@
     // Resize timer
     var resizeDone = false;
 
+    // Has the map zoom been set?
+    var zoomSet = false;
+
     // Has the Google Maps API started loading?
     var googleLoading = false;
 
@@ -88,10 +91,16 @@
             });
         }
 
-        // Set map zoom
+        // Set map zoom. The bounds_changed event is triggered by the user
+        // manually changing the zoom level, so this should only run once.
         if (zoom) {
             map.addListener('bounds_changed', function() {
+                if (zoomSet) {
+                    return;
+                }
+
                 map.setZoom(zoom);
+                zoomSet = true;
             });
         }
     };
@@ -162,6 +171,7 @@
 
         if (settings.responsive) {
             $(window).on('resizeDone', function() {
+                zoomSet = false;
                 resetBounds(map, bounds, settings.center, settings.zoom);
             });
         }
