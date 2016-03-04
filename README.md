@@ -73,3 +73,11 @@ By default, the plugin will automatically load the required JavaScript API and w
             console.log(map);
         }
     });
+
+## Commands ##
+
+`$('.foo').mapify('redraw')` will redraw a map that has already been added to the selected element with its original settings.
+
+`$('.foo').mapify('remove')` will remove a map, leaving the plugin and its settings attached to the selected element. The map can then be restored with the `redraw` command above.
+
+`$('.foo').mapify('destroy')` will completely remove a map, including its settings, so that it cannot be recovered.
