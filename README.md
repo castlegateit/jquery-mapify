@@ -81,3 +81,20 @@ By default, the plugin will automatically load the required JavaScript API and w
 `$('.foo').mapify('remove')` will remove a map, leaving the plugin and its settings attached to the selected element. The map can then be restored with the `redraw` command above.
 
 `$('.foo').mapify('destroy')` will completely remove a map, including its settings, so that it cannot be recovered.
+
+`$('.foo').mapify('instance')` will return a single Mapify instance or an array of instances for the selected element(s). This lets you manipulate the map, the bounds, or the object instance itself. For example, you can change the centre of the map via the Mapify object settings:
+
+    var instance = map.mapify('instance');
+    instance.settings.center = {
+        lat: 53.9585914,
+        lng: -1.1156109
+    };
+    instance.drawMap();
+
+Alternatively, you could manipulate the Google Map itself:
+
+    var instance = map.mapify('instance');
+    instance.map.setCenter({
+        lat: 53.9585914,
+        lng: -1.1156109
+    });
