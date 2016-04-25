@@ -250,6 +250,21 @@
     // Add method to jQuery
     $.fn[pluginName] = function(options) {
         var _this = this;
+        var instances = [];
+
+        // Provide direct access to mapify instances
+        if (options === 'instance') {
+            _this.each(function() {
+                instances.push($.data(this, pluginName));
+            });
+
+            // Only return an array if there is more than one instance
+            if (instances.length === 1) {
+                return instances[0];
+            }
+
+            return instances;
+        }
 
         // Make sure Google Maps API is available before doing anything
         Plugin.getGoogleMaps(function() {
