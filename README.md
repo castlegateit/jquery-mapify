@@ -49,7 +49,7 @@ $('.foo').mapify({
 
 `center` sets the centre of the map to a custom location. This is optional. By default, the map will use `fitBounds()` to find the center of the map based on the points:
 
-~~~ php
+~~~ javascript
 $('.foo').mapify({
     points: [], // array of points
     center: {
@@ -61,7 +61,7 @@ $('.foo').mapify({
 
 `zoom` sets the zoom level of the map. By default, the map will use `fitBounds()` so that all points will be visible on the map:
 
-~~~ php
+~~~ javascript
 $('.foo').mapify({
     points: [], // array of points
     zoom: 12
@@ -70,7 +70,7 @@ $('.foo').mapify({
 
 `responsive` forces the map to reset its centre and zoom level when the browser window is resized. By default, this is set to `false`.
 
-~~~ php
+~~~ javascript
 $('.foo').mapify({
     points: [], // array of points
     responsive: true
@@ -79,7 +79,7 @@ $('.foo').mapify({
 
 `callback` lets you do something else with the map and its data. It is a function that takes the map, the bounds, and the settings as its arguments:
 
-~~~ php
+~~~ javascript
 $('.foo').mapify({
     points: [], // array of points
     callback: function(map, bounds, settings) {
@@ -98,17 +98,24 @@ $('.foo').mapify({
 
 `$('.foo').mapify('instance')` will return a single Mapify instance or an array of instances for the selected element(s). This lets you manipulate the map, the bounds, or the object instance itself. For example, you can change the centre of the map via the Mapify object settings:
 
-    var instance = map.mapify('instance');
-    instance.settings.center = {
-        lat: 53.9585914,
-        lng: -1.1156109
-    };
-    instance.drawMap();
+~~~ javascript
+var instance = map.mapify('instance');
+
+instance.settings.center = {
+    lat: 53.9585914,
+    lng: -1.1156109
+};
+
+instance.drawMap();
+~~~
 
 Alternatively, you could manipulate the Google Map itself:
 
-    var instance = map.mapify('instance');
-    instance.map.setCenter({
-        lat: 53.9585914,
-        lng: -1.1156109
-    });
+~~~ javascript
+var instance = map.mapify('instance');
+
+instance.map.setCenter({
+    lat: 53.9585914,
+    lng: -1.1156109
+});
+~~~
