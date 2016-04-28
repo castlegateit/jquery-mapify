@@ -13,6 +13,7 @@
 
     // Name and default settings
     var pluginName = 'mapify';
+    var resizeName = pluginName + 'ResizeDone';
     var defaults = {
         points: [],
         type: 'roadmap',
@@ -30,7 +31,7 @@
     };
 
     // Has the window finished resizing?
-    var resizeDone = false;
+    var resizeTimer = false;
 
     // Constructor
     var Plugin = function(element, options) {
@@ -224,7 +225,7 @@
 
         // Reset position and zoom for responsive maps
         if (_this.settings.responsive) {
-            $(window).on('resizeDone', function() {
+            $(window).on(resizeName, function() {
                 _this._zoomSet = false;
                 _this.resetBounds();
             });
@@ -297,10 +298,10 @@
 
     // Trigger resizeDone event when window resize complete
     $(window).on('resize', function() {
-        clearTimeout(resizeDone);
+        clearTimeout(resizeTimer);
 
-        resizeDone = setTimeout(function() {
-            $(window).trigger('resizeDone');
+        resizeTimer = setTimeout(function() {
+            $(window).trigger(resizeName);
         }, 100);
     });
 })(jQuery, window, document);
