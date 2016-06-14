@@ -154,7 +154,7 @@
         });
 
         // If the marker option is a string, assume it is a custom image
-        if ($.type(marker) === 'string') {
+        if ($.type(point.marker) === 'string') {
             marker.setIcon(point.marker);
         }
 
