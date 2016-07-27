@@ -1,5 +1,5 @@
 /**
- * jQuery Mapify v1.1
+ * jQuery Mapify v1.2
  * http://github.com/castlegateit/jquery-mapify
  *
  * Copyright (c) 2016 Castlegate IT
@@ -20,6 +20,7 @@
         center: false,
         zoom: false,
         responsive: false,
+        key: false,
         callback: false
     };
 
@@ -75,28 +76,38 @@
         }
     };
 
-    // Static method to load Google Maps API
-    Plugin.getGoogleMaps = function(callback) {
-        if (this.googleReady()) {
+    // Initialization
+    Plugin.prototype.init = function() {
+        var _this = this;
+
+        // Save original styles so they can be restored later
+        _this._style = $(_this.element).attr('style');
+
+        // Load the API and draw the map
+        _this.getApi(function() {
+            _this.drawMap();
+        });
+    };
+
+    // Load the Google Maps API and do something with it
+    Plugin.prototype.getApi = function(callback) {
+        var uri = '//maps.google.com/maps/api/js';
+
+        // For backward compatibility, the API key is optional
+        if (this.settings.key) {
+            uri = uri + '?key=' + this.settings.key;
+        }
+
+        if (Plugin.googleReady()) {
             return callback();
         }
 
-        if (!this.googleLoaded) {
-            $.getScript('//maps.google.com/maps/api/js');
-            this.googleLoaded = true;
+        if (!Plugin.googleLoaded) {
+            $.getScript(uri);
+            Plugin.googleLoaded = true;
         }
 
-        this.until(this.googleReady, callback, 50, 4000);
-    };
-
-    // Initialization
-    Plugin.prototype.init = function() {
-
-        // Save original styles so they can be restored later
-        this._style = $(this.element).attr('style');
-
-        // Draw map
-        this.drawMap();
+        Plugin.until(Plugin.googleReady, callback, 50, 4000);
     };
 
     // Return a valid map type based on a string or a map type ID. If an invalid
@@ -267,30 +278,27 @@
             return instances;
         }
 
-        // Make sure Google Maps API is available before doing anything
-        Plugin.getGoogleMaps(function() {
-            _this.each(function() {
-                var instance = $.data(this, pluginName);
+        _this.each(function() {
+            var instance = $.data(this, pluginName);
 
-                // Identify named command, check for an existing instance of the
-                // class, and check the command exists.
-                if ($.type(options) === 'string') {
-                    if (
-                        typeof instance === 'undefined' ||
-                        typeof commands[options] === 'undefined'
-                    ) {
-                        return false;
-                    }
-
-                    // Run named command
-                    return instance[commands[options]]();
+            // Identify named command, check for an existing instance of the
+            // class, and check the command exists.
+            if ($.type(options) === 'string') {
+                if (
+                    typeof instance === 'undefined' ||
+                    typeof commands[options] === 'undefined'
+                ) {
+                    return false;
                 }
 
-                // Make sure there is only one instance per element
-                if (!$.data(this, pluginName)) {
-                    $.data(this, pluginName, new Plugin(this, options));
-                }
-            });
+                // Run named command
+                return instance[commands[options]]();
+            }
+
+            // Make sure there is only one instance per element
+            if (!$.data(this, pluginName)) {
+                $.data(this, pluginName, new Plugin(this, options));
+            }
         });
 
         return _this;

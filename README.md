@@ -88,6 +88,15 @@ $('.foo').mapify({
 });
 ~~~
 
+`key` sets the Google Maps API key:
+
+~~~ javascript
+$('.foo').mapify({
+    points: [], // array of points
+    key: 'unique_api_key'
+});
+~~~
+
 ## Commands ##
 
 `$('.foo').mapify('redraw')` will redraw a map that has already been added to the selected element with its original settings.
