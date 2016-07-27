@@ -220,6 +220,9 @@
     Plugin.prototype.drawMap = function() {
         var _this = this;
 
+        // Reset zoom
+        _this._zoomSet = false;
+
         // Create map and bounds
         _this.map = new google.maps.Map(_this.element, {
             mapTypeId: _this.mapType()
