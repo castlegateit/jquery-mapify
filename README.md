@@ -97,6 +97,18 @@ $('.foo').mapify({
 });
 ~~~
 
+`options` can be used to pass additional [options](https://developers.google.com/maps/documentation/javascript/reference#MapOptions) to the Google Maps object:
+
+~~~ javascript
+$('.foo').mapify({
+    points: [], // array of points
+    options: {
+        fullscreenControl: true,
+        scrollwheel: false
+    }
+});
+~~~
+
 ## Commands ##
 
 `$('.foo').mapify('redraw')` will redraw a map that has already been added to the selected element with its original settings.

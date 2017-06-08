@@ -1,5 +1,5 @@
 /**
- * jQuery Mapify v1.2
+ * jQuery Mapify v1.3
  * http://github.com/castlegateit/jquery-mapify
  *
  * Copyright (c) 2016 Castlegate IT
@@ -21,6 +21,7 @@
         zoom: false,
         responsive: false,
         key: false,
+        options: {},
         callback: false
     };
 
@@ -228,6 +229,9 @@
             mapTypeId: _this.mapType()
         });
         _this.bounds = new google.maps.LatLngBounds();
+
+        // Apply additional native map options
+        _this.map.setOptions(_this.settings.options);
 
         // Add points to map
         $.each(_this.settings.points, function(i, point) {
