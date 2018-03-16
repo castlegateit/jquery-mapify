@@ -1,5 +1,5 @@
 /**
- * jQuery Mapify v1.3
+ * jQuery Mapify v2.0
  * http://github.com/castlegateit/jquery-mapify
  *
  * Copyright (c) 2016 Castlegate IT
@@ -11,273 +11,315 @@
 ;(function($, window, document, undefined) {
     'use strict';
 
-    // Name and default settings
-    var pluginName = 'mapify';
-    var resizeName = pluginName + 'ResizeDone';
+    /**
+     * Plugin name
+     */
+    var name = 'mapify';
+
+    /**
+     * Default options
+     */
     var defaults = {
-        points: [],
-        type: 'roadmap',
+        callback: false,
         center: false,
-        zoom: false,
-        responsive: false,
         key: false,
         options: {},
-        callback: false
+        points: [],
+        responsive: false,
+        zoom: false
     };
 
-    // Map public commands to methods
-    var commands = {
-        redraw: 'drawMap',
-        remove: 'removeMap',
-        destroy: 'destroyMap'
-    };
+    /**
+     * Resize event name
+     */
+    var resizeEvent = 'mapifyWindowResized';
 
-    // Has the window finished resizing?
+    /**
+     * Timer used to prevent resize event firing too often
+     */
     var resizeTimer = false;
 
-    // Constructor
-    var Plugin = function(element, options) {
+    /**
+     * Plugin constructor
+     *
+     * Assign the selected element to a property, set the plugin options with
+     * default values where no values have been entered, and initialize the
+     * plugin.
+     */
+    var Plugin = function (element, options) {
         this.element = element;
-        this.settings = $.extend({}, defaults, options);
+        this.options = $.extend({}, defaults, options);
         this._defaults = defaults;
-        this._name = pluginName;
+        this._name = name;
+        this._centered = false;
+        this._zoomed = false;
 
         // Initialization
         this.init();
     };
 
-    // Static property used to store whether the API has been loaded
-    Plugin.googleLoaded = false;
+    /**
+     * Has the Google Maps API been loaded?
+     *
+     * This property is set to true to prevent the plugin from loading the
+     * Google Maps API more than once.
+     */
+    Plugin.loaded = false;
 
-    // Static method to check if the Google Maps API is ready
-    Plugin.googleReady = function() {
-        return typeof google !== 'undefined';
+    /**
+     * Initialization
+     *
+     * Save any embedded styles and content so that they can be restored later,
+     * then load the Google Maps API if it has not already been loaded and draw
+     * the map.
+     */
+    Plugin.prototype.init = function () {
+        this._styles = $(this.element).attr('style');
+        this._content = $(this.element).html();
+
+        this.load();
     };
 
-    // Static method to wait for a condition to be met before doing something
-    Plugin.until = function(condition, callback, time, stop) {
-        if (condition()) {
-            return callback();
+    /**
+     * Load Google Maps API and draw map
+     *
+     * If the Google Maps API has already been loaded, draw the map. If it has
+     * not been loaded, load it now and then draw the map.
+     */
+    Plugin.prototype.load = function () {
+        if (typeof google !== 'undefined' &&
+            typeof google.maps !== 'undefined') {
+            Plugin.loaded = true;
+            return this.draw();
         }
 
-        time = time || 100;
-        stop = stop || false;
-
-        var interval = setInterval(function() {
-            if (condition()) {
-                callback();
-                clearInterval(interval);
-            }
-        }, time);
-
-        if (stop) {
-            var timeout = setTimeout(function() {
-                clearInterval(interval);
-            }, stop);
-        }
-    };
-
-    // Initialization
-    Plugin.prototype.init = function() {
-        var _this = this;
-
-        // Save original styles so they can be restored later
-        _this._style = $(_this.element).attr('style');
-
-        // Load the API and draw the map
-        _this.getApi(function() {
-            _this.drawMap();
-        });
-    };
-
-    // Load the Google Maps API and do something with it
-    Plugin.prototype.getApi = function(callback) {
-        var uri = '//maps.google.com/maps/api/js';
-
-        // For backward compatibility, the API key is optional
-        if (this.settings.key) {
-            uri = uri + '?key=' + this.settings.key;
+        // If it does not already exist, create a global variable to hold the
+        // list of maps to draw after the API has loaded.
+        if (typeof window.mapifyMaps === 'undefined') {
+            window.mapifyMaps = [];
         }
 
-        if (Plugin.googleReady()) {
-            return callback();
-        }
+        // Append this map to the global list of maps to draw
+        window.mapifyMaps.push(this);
 
-        if (!Plugin.googleLoaded) {
-            $.getScript(uri);
-            Plugin.googleLoaded = true;
-        }
-
-        Plugin.until(Plugin.googleReady, callback, 50, 4000);
-    };
-
-    // Return a valid map type based on a string or a map type ID. If an invalid
-    // map type is supplied, return the default ROADMAP type.
-    Plugin.prototype.mapType = function() {
-        var key = this.settings.type;
-        var types = google.maps.MapTypeId;
-
-        // If string is an array key, check for key in array of types
-        if (types.hasOwnProperty(key)) {
-            return types[key];
-        }
-
-        // If string is an array value, check for value in array of types
-        for (var type in types) {
-            if (types[type] === key) {
-                return key;
-            }
-        }
-
-        // Return default type
-        return types.ROADMAP;
-    };
-
-    // Add point to map
-    Plugin.prototype.addPoint = function(point) {
-        var _this = this;
-        var position;
-        var marker;
-        var infoWindow;
-
-        // Each point must have a latitude and longitude.
-        if (!point.lat || !point.lng) {
-            return false;
-        }
-
-        // Set position
-        position = new google.maps.LatLng({
-            lat: point.lat,
-            lng: point.lng
-        });
-
-        // Extend bounds
-        _this.bounds.extend(position);
-
-        // If there is no marker, there is nothing more to do here
-        if (!point.marker) {
+        // If the API has already started loading, do not load it again. The
+        // maps will be drawn by the global callback function.
+        if (Plugin.loaded) {
             return;
         }
 
-        // Add marker
-        marker = new google.maps.Marker({
-            map: _this.map,
-            position: position
-        });
+        var url = '//maps.googleapis.com/maps/api/js';
 
-        // If the marker option is a string, assume it is a custom image
-        if ($.type(point.marker) === 'string') {
-            marker.setIcon(point.marker);
-        }
+        // Append API parameters to the URL
+        url = url + '?v=3.31';
+        url = url + '&callback=mapifyInit';
+        url = url + '&key=' + this.options.key;
 
-        // Add title
-        if (point.title) {
-            marker.setTitle(point.title);
-        }
+        // Load the API
+        $.getScript(url);
 
-        // Add information window
-        if (point.infoWindow) {
-            infoWindow = new google.maps.InfoWindow({
-                content: point.infoWindow
-            });
-
-            marker.addListener('click', function() {
-                infoWindow.open(_this.map, marker);
-            });
-        }
+        // Prevent the Google Maps API script from being downloaded by the
+        // plugin more than once.
+        Plugin.loaded = true;
     };
 
-    // Set map position and zoom
-    Plugin.prototype.resetBounds = function() {
-        var _this = this;
-        var center = this.settings.center;
-        var zoom = this.settings.zoom;
-
-        // Fit bounds
-        _this.map.fitBounds(_this.bounds);
-
-        // Set center
-        if (center.lat && center.lng) {
-            _this.map.addListener('bounds_changed', function() {
-                _this.map.setCenter(center);
-            });
-        }
-
-        // Set zoom. The bounds_changed event is also triggered by the user
-        // manually changing the zoom level, so this should only run once.
-        if (zoom) {
-            _this.map.addListener('bounds_changed', function() {
-                if (_this._zoomSet) {
-                    return;
-                }
-
-                _this.map.setZoom(zoom);
-                _this._zoomSet = true;
-            });
-        }
-    };
-
-    // Draw map
-    Plugin.prototype.drawMap = function() {
+    /**
+     * Draw map
+     *
+     * Create map and bounds instances, apply any additional native Google Maps
+     * API options, and add the points to the map.
+     */
+    Plugin.prototype.draw = function () {
         var _this = this;
 
-        // Reset zoom
-        _this._zoomSet = false;
-
-        // Create map and bounds
-        _this.map = new google.maps.Map(_this.element, {
-            mapTypeId: _this.mapType()
-        });
+        // Create the map and bounds instances
+        _this.map = new google.maps.Map(_this.element);
         _this.bounds = new google.maps.LatLngBounds();
 
-        // Apply additional native map options
-        _this.map.setOptions(_this.settings.options);
+        // Apply additional native Google Maps API options
+        _this.map.setOptions(_this.options.options);
 
-        // Add points to map
-        $.each(_this.settings.points, function(i, point) {
-            _this.addPoint(point);
+        // Add points to the map
+        $.each(_this.options.points, function (index, point) {
+            _this.insertPoint(point);
         });
 
-        // Set map position and zoom based on points and settings
-        _this.resetBounds();
+        // Set the initial zoom and fit bounds
+        _this.zoom();
 
-        // Reset position and zoom for responsive maps
-        if (_this.settings.responsive) {
-            $(window).on(resizeName, function() {
-                _this._zoomSet = false;
-                _this.resetBounds();
+        // If this is a responsive map, set the zoom and bounds again after the
+        // window has been resized.
+        if (_this.options.responsive) {
+            $(window).on(resizeEvent, function () {
+                _this.zoom();
             });
         }
 
         // Run callback
-        if (_this.settings.callback) {
-            _this.settings.callback(_this.map, _this.bounds, _this.settings);
+        if (_this.options.callback) {
+            _this.options.callback(_this);
         }
     };
 
-    // Remove map, keeping the instance for future use
-    Plugin.prototype.removeMap = function() {
-        $(this.element).empty().attr('style', this._style);
-    };
-
-    // Destroy map, removing the instance completely
-    Plugin.prototype.destroyMap = function() {
-        this.removeMap();
-        $.removeData(this.element, pluginName);
-    };
-
-    // Add method to jQuery
-    $.fn[pluginName] = function(options) {
+    /**
+     * Set zoom and fit bounds
+     *
+     * Fit the map to the points. Then, set a custom zoom level and centre if
+     * the options have been set. These have to run on bounds_changed to make
+     * sure they take effect after the fitBounds method has been applied.
+     */
+    Plugin.prototype.zoom = function () {
         var _this = this;
-        var instances = [];
+        var location = _this.options.center;
+        var zoom = _this.options.zoom;
 
-        // Provide direct access to mapify instances
-        if (options === 'instance') {
-            _this.each(function() {
-                instances.push($.data(this, pluginName));
+        // Fit map to points
+        _this.map.fitBounds(_this.bounds);
+
+        // Set the centre of the map
+        if (location && typeof location.lat !== 'undefined' &&
+            typeof location.lng !== 'undefined') {
+            _this.map.setCenter(location);
+
+            _this.map.addListener('bounds_changed', function () {
+                // Allow user to change centre and zoom by only re-zooming on
+                // the first bounds_changed, which should be triggered by the
+                // fitBounds method.
+                if (_this._centered) {
+                    return;
+                }
+
+                _this.map.setCenter(location);
+                _this._centered = true;
+            });
+        }
+
+        // Set the zoom level
+        if (zoom) {
+            _this.map.setZoom(zoom);
+
+            _this.map.addListener('bounds_changed', function () {
+                // Allow user to change centre and zoom by only re-zooming on
+                // the first bounds_changed, which should be triggered by the
+                // fitBounds method.
+                if (_this._zoomed) {
+                    return;
+                }
+
+                _this.map.setZoom(zoom);
+                _this._zoomed = true;
+            });
+        }
+    };
+
+    /**
+     * Insert map point
+     *
+     * Add a point to the map with the specified options and extend the bounds
+     * of the map to include the new point.
+     */
+    Plugin.prototype.insertPoint = function (options) {
+        var _this = this;
+
+        // Fill in the gaps in the options with default values
+        var point = $.extend({
+            lat: false,
+            lng: false,
+            marker: false,
+            title: false,
+            infoWindow: false
+        }, options);
+
+        // No latitude or longitude? No point for you.
+        if (!point.lat || !point.lng) {
+            return;
+        }
+
+        // Location of point as LatLng instance
+        var location = new google.maps.LatLng({
+            lat: point.lat,
+            lng: point.lng
+        });
+
+        // Extend bounds to include this location
+        _this.bounds.extend(location);
+
+        // No marker? Nothing more to do here.
+        if (!point.marker) {
+            return;
+        }
+
+        // Add marker at location
+        var marker = new google.maps.Marker({
+            map: _this.map,
+            position: location
+        });
+
+        // If the marker option is a string, assume that it is the URL of a
+        // custom marker image.
+        if ($.type(point.marker) === 'string') {
+            marker.setIcon(point.marker);
+        }
+
+        // Add a title to the marker?
+        if (point.title) {
+            marker.setTitle(point.title);
+        }
+
+        // Add an information window to the maker?
+        if (point.infoWindow) {
+            var info = new google.maps.InfoWindow({
+                content: point.infoWindow
             });
 
-            // Only return an array if there is more than one instance
+            marker.addListener('click', function () {
+                info.open(_this.map, marker);
+            });
+        }
+    };
+
+    /**
+     * Remove map
+     *
+     * Safely remove the map from its container, restoring its original styles
+     * and content. This instance is still available in the element's data.
+     */
+    Plugin.prototype.remove = function () {
+        var wrap = $(this.element);
+
+        wrap.html(this._content);
+        wrap.attr('style', this._styles);
+    };
+
+    /**
+     * Destroy map
+     *
+     * Remove the map, restore its styles and content, then destroy this
+     * instance so the map data cannot be recovered.
+     */
+    Plugin.prototype.destroy = function () {
+        this.remove();
+        $.removeData(this.element, name);
+    };
+
+    /**
+     * Add plugin method to jQuery
+     *
+     * Append the plugin method to jQuery with the plugin name as the method
+     * name. This instantiates the plugin class for each of the collection of
+     * elements generated by the jQuery selector.
+     */
+    $.fn[name] = function (options) {
+        var _this = this;
+
+        // Return instance(s)
+        if (_this.options === 'instance') {
+            var instances = [];
+
+            _this.each(function () {
+                instances.push($.data(_this, name));
+            });
+
             if (instances.length === 1) {
                 return instances[0];
             }
@@ -285,38 +327,69 @@
             return instances;
         }
 
-        _this.each(function() {
-            var instance = $.data(this, pluginName);
+        // Apply method to each item in the jQuery collection
+        _this.each(function () {
+            var instance = $.data(this, name);
 
-            // Identify named command, check for an existing instance of the
-            // class, and check the command exists.
+            // Named commands
             if ($.type(options) === 'string') {
-                if (
-                    typeof instance === 'undefined' ||
-                    typeof commands[options] === 'undefined'
-                ) {
-                    return false;
+                if (typeof instance === 'undefined') {
+                    return;
                 }
 
-                // Run named command
-                return instance[commands[options]]();
+                switch (options) {
+                    case 'redraw':
+                        return instance.draw();
+                    case 'remove':
+                        return instance.remove();
+                    case 'destroy':
+                        return instance.destroy();
+                    default:
+                        return;
+                }
             }
 
-            // Make sure there is only one instance per element
-            if (!$.data(this, pluginName)) {
-                $.data(this, pluginName, new Plugin(this, options));
+
+            // If the element data does not include an instance of the plugin,
+            // create a new one and add it to the element data.
+            if ($.type(instance) == 'undefined') {
+                instance = new Plugin(this, options);
+                $.data(this, name, instance);
             }
         });
 
+        // Return collection for method chaining
         return _this;
     };
 
-    // Trigger resizeDone event when window resize complete
-    $(window).on('resize', function() {
-        clearTimeout(resizeTimer);
+    /**
+     * Initialize map(s) after Google Maps API loaded
+     *
+     * If the Google Maps API is not available, it is downloaded with this
+     * method as the callback to run as soon as the script is loaded. This will
+     * draw any maps that need to be drawn.
+     */
+    window.mapifyInit = function () {
+        if (typeof window.mapifyMaps === 'undefined') {
+            return;
+        }
+
+        $.each(window.mapifyMaps, function (index, instance) {
+            instance.draw();
+        });
+    };
+
+    /**
+     * Trigger resize event
+     *
+     * Trigger an event when the window has finished resizing, not while it is
+     * still being resized.
+     */
+    $(window).on('resize', function () {
+        window.clearTimeout(resizeTimer);
 
         resizeTimer = setTimeout(function() {
-            $(window).trigger(resizeName);
+            $(window).trigger(resizeEvent);
         }, 100);
     });
 })(jQuery, window, document);

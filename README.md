@@ -38,15 +38,6 @@ $('.foo').mapify({
 });
 ~~~
 
-`type` sets the map type. You can use the constants supplied by Google, or a case-insensitive string that matches those types. The default type is `roadmap`:
-
-~~~ javascript
-$('.foo').mapify({
-    points: [], // array of points
-    type: 'hybrid'
-});
-~~~
-
 `center` sets the centre of the map to a custom location. This is optional. By default, the map will use `fitBounds()` to find the center of the map based on the points:
 
 ~~~ javascript
