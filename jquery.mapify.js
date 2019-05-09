@@ -5,8 +5,8 @@
  * Copyright (c) 2016 Castlegate IT
  * http://www.castlegateit.co.uk/
  *
- * Released under the MIT License
- * http://www.opensource.org/licenses/MIT
+ * Released under the AGPLv3
+ * http://www.opensource.org/licenses/AGPL-3.0
  */
 ;(function($, window, document, undefined) {
     'use strict';
