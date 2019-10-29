@@ -1,4 +1,4 @@
-# jQuery Mapify #
+# jQuery Mapify
 
 A jQuery plugin for quickly adding maps via the Google Maps API. To add a map to an element, use the `mapify()` method:
 
@@ -15,7 +15,13 @@ $('.foo').mapify({
 
 By default, the plugin will automatically load the required JavaScript API and will centre and zoom the map to show all the points. The default map type is `google.maps.mapTypeId.ROADMAP`. You can add as many points to the map as you like.
 
-## Options ##
+## Install
+
+Install with npm:
+
+    npm install --save-dev github:castlegateit/jquery-mapify
+
+## Options
 
 `points` is an array of coordinates to display on the map. You can add multiple points and each point can have a marker, title, and information window:
 
@@ -100,7 +106,7 @@ $('.foo').mapify({
 });
 ~~~
 
-## Commands ##
+## Commands
 
 `$('.foo').mapify('redraw')` will redraw a map that has already been added to the selected element with its original settings.
 
