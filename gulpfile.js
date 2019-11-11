@@ -4,7 +4,7 @@
 'use strict';
 
 // Configuration
-const name = 'jquery.mapify.js';
+const name = 'google-maps.js';
 const src = './src/*.js';
 const dest = './dist';
 

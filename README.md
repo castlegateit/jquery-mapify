@@ -1,9 +1,9 @@
-# jQuery Mapify
+# Google Maps
 
-A jQuery plugin for quickly adding maps via the Google Maps API. To add a map to an element, use the `mapify()` method:
+A jQuery plugin for quickly adding maps via the Google Maps API. To add a map to an element, use the `googleMaps()` method:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [
         {
             lat: 53.3171819,
@@ -19,14 +19,14 @@ By default, the plugin will automatically load the required JavaScript API and w
 
 Install with npm:
 
-    npm install --save-dev github:castlegateit/jquery-mapify
+    npm install --save-dev castlegate-google-maps
 
 ## Options
 
 `points` is an array of coordinates to display on the map. You can add multiple points and each point can have a marker, title, and information window:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [
         {
             lat: 53.3171819,
@@ -47,7 +47,7 @@ $('.foo').mapify({
 `center` sets the centre of the map to a custom location. This is optional. By default, the map will use `fitBounds()` to find the center of the map based on the points:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     center: {
         lat: 53.3171819,
@@ -59,7 +59,7 @@ $('.foo').mapify({
 `zoom` sets the zoom level of the map. By default, the map will use `fitBounds()` so that all points will be visible on the map:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     zoom: 12
 });
@@ -68,7 +68,7 @@ $('.foo').mapify({
 `responsive` forces the map to reset its centre and zoom level when the browser window is resized. By default, this is set to `false`.
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     responsive: true
 });
@@ -77,7 +77,7 @@ $('.foo').mapify({
 `callback` lets you do something else with the map and its data. It is a function that takes the map, the bounds, and the settings as its arguments:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     callback: function(map, bounds, settings) {
         console.log(map);
@@ -88,7 +88,7 @@ $('.foo').mapify({
 `key` sets the Google Maps API key:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     key: 'unique_api_key'
 });
@@ -97,7 +97,7 @@ $('.foo').mapify({
 `options` can be used to pass additional [options](https://developers.google.com/maps/documentation/javascript/reference#MapOptions) to the Google Maps object:
 
 ~~~ javascript
-$('.foo').mapify({
+$('.foo').googleMaps({
     points: [], // array of points
     options: {
         fullscreenControl: true,
@@ -108,16 +108,16 @@ $('.foo').mapify({
 
 ## Commands
 
-`$('.foo').mapify('redraw')` will redraw a map that has already been added to the selected element with its original settings.
+`$('.foo').googleMaps('redraw')` will redraw a map that has already been added to the selected element with its original settings.
 
-`$('.foo').mapify('remove')` will remove a map, leaving the plugin and its settings attached to the selected element. The map can then be restored with the `redraw` command above.
+`$('.foo').googleMaps('remove')` will remove a map, leaving the plugin and its settings attached to the selected element. The map can then be restored with the `redraw` command above.
 
-`$('.foo').mapify('destroy')` will completely remove a map, including its settings, so that it cannot be recovered.
+`$('.foo').googleMaps('destroy')` will completely remove a map, including its settings, so that it cannot be recovered.
 
-`$('.foo').mapify('instance')` will return a single Mapify instance or an array of instances for the selected element(s). This lets you manipulate the map, the bounds, or the object instance itself. For example, you can change the centre of the map via the Mapify object settings:
+`$('.foo').googleMaps('instance')` will return a single instance or an array of instances for the selected element(s). This lets you manipulate the map, the bounds, or the object instance itself. For example, you can change the centre of the map via the object settings:
 
 ~~~ javascript
-var instance = map.mapify('instance');
+var instance = map.googleMaps('instance');
 
 instance.settings.center = {
     lat: 53.9585914,
@@ -130,7 +130,7 @@ instance.drawMap();
 Alternatively, you could manipulate the Google Map itself:
 
 ~~~ javascript
-var instance = map.mapify('instance');
+var instance = map.googleMaps('instance');
 
 instance.map.setCenter({
     lat: 53.9585914,

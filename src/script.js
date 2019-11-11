@@ -1,7 +1,7 @@
 /**
  * Plugin name
  */
-var name = 'mapify';
+var name = 'googleMaps';
 
 /**
  * Default options
@@ -19,7 +19,7 @@ var defaults = {
 /**
  * Resize event name
  */
-var resizeEvent = 'mapifyWindowResized';
+var resizeEvent = 'googleMapsWindowResized';
 
 /**
  * Timer used to prevent resize event firing too often
@@ -82,12 +82,12 @@ Plugin.prototype.load = function () {
 
     // If it does not already exist, create a global variable to hold the
     // list of maps to draw after the API has loaded.
-    if (typeof window.mapifyMaps === 'undefined') {
-        window.mapifyMaps = [];
+    if (typeof window.googleMaps === 'undefined') {
+        window.googleMaps = [];
     }
 
     // Append this map to the global list of maps to draw
-    window.mapifyMaps.push(this);
+    window.googleMaps.push(this);
 
     // If the API has already started loading, do not load it again. The
     // maps will be drawn by the global callback function.
@@ -99,7 +99,7 @@ Plugin.prototype.load = function () {
 
     // Append API parameters to the URL
     url = url + '?v=3.31';
-    url = url + '&callback=mapifyInit';
+    url = url + '&callback=googleMapsInit';
     url = url + '&key=' + this.options.key;
 
     // Load the API
@@ -356,12 +356,12 @@ $.fn[name] = function (options) {
  * method as the callback to run as soon as the script is loaded. This will
  * draw any maps that need to be drawn.
  */
-window.mapifyInit = function () {
-    if (typeof window.mapifyMaps === 'undefined') {
+window.googleMapsInit = function () {
+    if (typeof window.googleMaps === 'undefined') {
         return;
     }
 
-    $.each(window.mapifyMaps, function (index, instance) {
+    $.each(window.googleMaps, function (index, instance) {
         instance.draw();
     });
 };
