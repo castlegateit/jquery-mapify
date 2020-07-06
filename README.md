@@ -19,7 +19,7 @@ By default, the plugin will automatically load the required JavaScript API and w
 
 Install with npm:
 
-    npm install --save-dev castlegate-google-maps
+    npm install --save-dev @castlegate/jquery-google-maps
 
 ## Options
 
